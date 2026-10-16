@@ -1,0 +1,29 @@
+# Local stack: MySQL + Spring Boot API. Run the React app separately with `npm run dev`.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: jobportal
+      MYSQL_ROOT_PASSWORD: root
+    ports: ["3306:3306"]
+    volumes: [dbdata:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./backend
+    depends_on:
+      mysql: { condition: service_healthy }
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/jobportal?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASS: root
+      JWT_SECRET: local-dev-secret-change-me-please-0123456789
+      CORS_ORIGIN: http://localhost:5173
+    ports: ["8080:8080"]
+
+volumes:
+  dbdata:
